@@ -17,11 +17,8 @@ int main() {
   cout << "Enter the mathematical expression." << endl;
   cin.get(input, 80);
   cin.ignore();
-
-
+  
   Node* head = NULL;
-
-
   bool done = false;
   //cout << "hellO" << endl;
 
@@ -57,6 +54,8 @@ int main() {
         while(head->getData() != '(') {
           cout << pop(head)->getData() << flush;
         }
+        //gets rid of left parentheses.
+        pop(head);
     }
     //if the stack is empty or contains a left parentheses on top, push operator
     else if(head == NULL || head->getData() == '(') {
