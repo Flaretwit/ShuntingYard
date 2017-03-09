@@ -3,102 +3,114 @@
 //main.cpp
 #include <iostream>
 #include <vector>
-#include "LinkedList.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
+#include "Node.h"
 
-LLNode<char>* pop(LinkedList<char>*&);
-void push(LinkedList<char> *&, LLNode<char>*);
-LLNode<char>* peek(LinkedList<char> *);
-LLNode<char>* makeNode(char );
+Node* pop(Node*& head);
+void push(Node*& head, Node* newNode);
+int precedence(char c);
+bool isOperator(char c);
 using namespace std;
 
 int main() {
-  LinkedList<char>* ll = new LinkedList<char>;
   char* input = new char[80];
-  vector<char> output;
   cout << "Shunting Yard Algorithm" << endl;
   cout << "Enter the mathematical expression." << endl;
-  cin.getline(input, 80);
+  cin.get(input, 80);
+  cin.ignore();
+
+
+  Node* head = NULL;
+
 
   bool done = false;
-
+  //cout << "hellO" << endl;
 
   while(!done) {
     char* token = new char[80];
-    int i;
+    int i = 0;
     for(int i = 0; *input != ' ' && *input != '\0'; i++, input++) {
       token[i] = *input;
     }
-    if(*input == '\0') {
-      while(peek(ll)->data != 0) {
-        output.push_back(*(pop(ll)->data));
+    input++;
+    //cout << "Token: (" << token[0] << ")" << endl;
+    //when the expression has been completely read
+    //pops all the remaning operators in the stack into the output
+    if(token[0] == '\0') {
+      while(head != NULL) {
+            cout << pop(head)->getData() << flush;
       }
+      done = true;
     }
-    if(isdigit(token[0])) {
-      output.push_back(token[0]);
+    //if token is an digit, immediately prints it
+    else if(isdigit(token[0])) {
+      //cout << "Is a digit." << endl;
+      cout << token[0] << flush;
     }
-    else {
-      //if first token is a left parentheses.
-      if(token[0] == '(') {
-          push(ll, makeNode(token[0]));
-      }
-      //if first token is a right parentheses
-      else if(token[0] == ')') {
-        while(*(peek(ll)->data) != '(') {
-            output.push_back(*(pop(ll)->data));
+    //if token is a left parentheses, push onto stack
+    else if(token[0] == '(') {
+        Node* node = new Node(token[0]);
+        push(head, node);
+    }
+    //if token is a right parentheses, discrd it, then print and pop stack
+    //until a left parentheses is found.
+    else if(token[0] == ')') {
+        while(head->getData() != '(') {
+          cout << pop(head)->getData() << flush;
         }
-        //removes the left parentheses.
-        pop(ll);
+    }
+    //if the stack is empty or contains a left parentheses on top, push operator
+    else if(head == NULL || head->getData() == '(') {
+      //cout << "First time?" << flush;
+      Node* node = new Node(token[0]);
+      push(head, node);
+    }
+    //if token is an operator, pop the stack until the operator on top
+    //has the same or higher precedence. Then pushes the operator
+    else if(isOperator(token[0])) {
+      while(precedence(token[0]) < precedence(head->getData())) {
+        cout << pop(head)->getData() << flush;
+        //if head is now null, breka out of the loop
+        if(head == NULL) {
+          break;
+        }
       }
-      //if stack is empty or contains a '(', push operator.
-      else if((token[0] == '+' || token[0] == '-' ||
-            token[0] == '*' || token[0] == '/' || token[0] == '^')
-            && (ll->getHead() == NULL || *(peek(ll)->data) == '(')) {
-         push(ll, makeNode(token[0]));
-      }
-       //pops from stack until operator is of higher precedence, then pushes
-       //the new operator onto the stack.
-       else {
-         bool finished = false;
-         while(!finished) {
-           if(token[0] == '^' && *(peek(ll)->data) != '^') {
-               finished = true;
-               push(ll, makeNode(token[0]));
-           }
-           else if((token[0] == '*' || token[0] == '/')
-           && (*(peek(ll)->data) == '+' || *(peek(ll)->data) == '-')) {
-             finished = true;
-             push(ll, makeNode(token[0]));
-           }
-           else {
-             output.push_back(*pop(ll)->data);
-           }
-         }
-       }
+      //cout << "direcly here already" << flush;
+      Node* node = new Node(token[0]);
+      push(head, node);
     }
 
-  }
+}
   return 0;
-}
-//does the operation when the character is a digit
 
-//gets the information for a node
-LLNode<char>* makeNode(char token) {
-  LLNode<char>* node = new LLNode<char>();
-  node->data = &token;
-  return node;
+
 }
-LLNode<char>* peek(LinkedList<char>* ll) {
-  return ll->getHead();
+int precedence(char c) {
+  if(c == '+' || c == '-') {
+    return 1;
+  }
+  if(c == '*' || c == '/') {
+    return 2;
+  }
+  if(c == '^') {
+    return 3;
+  }
+}
+
+bool isOperator(char c) {
+  if(c == '+' || c == '-' || c == '*' || c == '/' || c == '^') {
+    return true;
+  }
+  return false;
 }
 
 //returns the most recent node in the stack.
-LLNode<char>* pop(LinkedList<char>*& ll) {
-  return ll->deleteNode(0);
+Node* pop(Node*& head) {
+  Node* current = head;
+  head = head->getNext();
+  return current;
 }
 //adds a node to the top of the stack (implemented as a Linkedlist)
-void push(LinkedList<char>*& ll, LLNode<char>* node) {
-  ll->addAt(0, node, ll->getHead());
+void push(Node*& head, Node* node) {
+  node->setNext(head);
+  head = node;
 }
